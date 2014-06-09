@@ -9,7 +9,11 @@ class RectanglesEnclosing:
 		rowHeight = [self.eh]
 		colWidth = [self.ew]
 		rectPosition = []
+		failedRect = None
+		rightMostRect = 0 
+		rightMostPos = 0
 		for rect in self.rects:
+			rectPlaced = False
 			for col in range(0, len(occupied)):
 				gotSpace = False
 				for row in range(0, len(occupied[col])): 
@@ -81,13 +85,26 @@ class RectanglesEnclosing:
 									gotSpace = True
 									break
 				if gotSpace:
+					rightPos = rectPosition[-1]['y'] + rect['height']
+					if rightMostPos < rightPos:
+						rightMostPos = rightPos
+						rightMostRect = rect
+					rectPlaced = True
 					break
-		print occupied
-		print rowHeight
-		print colWidth
+			if not rectPlaced:
+				failedRect = rect	
+				break
+		#print occupied
+		#print rowHeight
+		#print colWidth
 		print rectPosition
-		return None
+		if len(rectPosition) < len(self.rects):
+			return {'result': False, 'failedRect': failedRect}
+		else:
+			return {'result': True, 'rightMostRect': rightMostRect} 
 
+	def compute(self):
+		return self.computeEnclosing()
 
 def main():
 	# init work: input rectangles , sort them by
@@ -110,7 +127,7 @@ def main():
 	
 	# place the rectangles into the initial large rectangle
 	action = RectanglesEnclosing(ewidth, eheight, rects)
-	action.computeEnclosing()
+	print (action.compute())
 
 if __name__ == "__main__":
 	main()
