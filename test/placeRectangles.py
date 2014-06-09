@@ -1,9 +1,11 @@
 import pdb
 class RectanglesEnclosing:
-	def __init__(self, w, h, rects):
-		self.ew = w
-		self.eh = h
+	def __init__(self, rects):
 		self.rects = rects
+		self.eresult = {}
+	def setSize(self, width, height):
+		self.ew = width
+		self.eh = height
 	def computeEnclosing(self):
 		occupied = [[False]]
 		rowHeight = [self.eh]
@@ -12,6 +14,8 @@ class RectanglesEnclosing:
 		failedRect = None
 		rightMostRect = 0 
 		rightMostPos = 0
+		rightMostTallest = 0
+		bottomMostPos = 0
 		for rect in self.rects:
 			rectPlaced = False
 			for col in range(0, len(occupied)):
@@ -85,10 +89,15 @@ class RectanglesEnclosing:
 									gotSpace = True
 									break
 				if gotSpace:
-					rightPos = rectPosition[-1]['y'] + rect['height']
-					if rightMostPos < rightPos:
+					rightPos = rectPosition[-1]['x'] + rect['width']
+					bottomPos = rectPosition[-1]['y'] + rect['height']
+					if rightMostPos < rightPos or rightMostPos == rightPos and rect['height'] > rightMostRect['height']:
 						rightMostPos = rightPos
 						rightMostRect = rect
+						rightMostTallest = rect['height']
+
+					if bottomMostPos < bottomPos:
+						bottomMostPos = bottomPos
 					rectPlaced = True
 					break
 			if not rectPlaced:
@@ -97,14 +106,29 @@ class RectanglesEnclosing:
 		#print occupied
 		#print rowHeight
 		#print colWidth
-		print rectPosition
+		#print rectPosition
 		if len(rectPosition) < len(self.rects):
-			return {'result': False, 'failedRect': failedRect}
+			return {'result': False, 'failedRect': failedRect, 'size': {'width': self.ew, 'height': self.eh}}
 		else:
-			return {'result': True, 'rightMostRect': rightMostRect} 
+			return {
+					'result': True, 'rightMostRect': rightMostRect, 
+					'size': {'width': rightMostPos, 'height': bottomMostPos, 'area': rightMostPos * bottomMostPos}, 
+					'rectPosition': rectPosition
+				} 
 
 	def compute(self):
-		return self.computeEnclosing()
+		while True:
+			computeResult = self.computeEnclosing()
+			if computeResult['result']:
+				if not self.eresult:
+					self.eresult = computeResult
+				else:
+					pdb.set_trace()
+					if self.eresult['size']['area'] > computeResult['size']['area']: 
+						self.eresult = computeResult
+				self.setSize(computeResult['size']['width']-1, computeResult['size']['height']+computeResult['rightMostRect']['height'])
+			else: 
+				return
 
 def main():
 	# init work: input rectangles , sort them by
@@ -126,7 +150,8 @@ def main():
 	# end of init work
 	
 	# place the rectangles into the initial large rectangle
-	action = RectanglesEnclosing(ewidth, eheight, rects)
+	action = RectanglesEnclosing(rects)
+	action.setSize(ewidth, eheight)
 	print (action.compute())
 
 if __name__ == "__main__":
