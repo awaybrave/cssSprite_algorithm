@@ -1,7 +1,19 @@
 import pdb
+class ImageDealer:
+	def readImageInfo(self, path):
+		# read a path 
+		return None
+	def outputEnclosingImage(self, enInfo):
+		return None	
+
 class RectanglesEnclosing:
 	def __init__(self, rects):
 		self.rects = rects
+		self.rectsTotal = 0
+		self.maxWidth = 0;
+		for rect in rects:
+			self.rectsTotal = self.rectsTotal + rect['width'] * rect['height']
+			self.maxWidth = max(self.maxWidth, rect['width'])
 		self.eresult = {}
 	def setSize(self, width, height):
 		self.ew = width
@@ -117,23 +129,37 @@ class RectanglesEnclosing:
 				} 
 
 	def compute(self):
-		while True:
+		successCount = 0
+		while self.ew >= self.maxWidth:
+			#pdb.set_trace()
 			computeResult = self.computeEnclosing()
 			if computeResult['result']:
 				if not self.eresult:
 					self.eresult = computeResult
 				else:
-					pdb.set_trace()
+					#pdb.set_trace()
 					if self.eresult['size']['area'] > computeResult['size']['area']: 
 						self.eresult = computeResult
-				self.setSize(computeResult['size']['width']-1, computeResult['size']['height']+computeResult['rightMostRect']['height'])
+				successCount = successCount + 1
+				if successCount == 10:
+					break
+				newWidth = computeResult['size']['width']-1
+				newHeight = computeResult['size']['height']+computeResult['rightMostRect']['height']
+				while newWidth * newHeight < self.rectsTotal:
+					newHeight = newHeight + 1
 			else: 
-				return
+				newWidth = self.eresult['size']['width']-1
+				newHeight = computeResult['size']['height'] + computeResult['failedRect']['height']
+			self.setSize(newWidth, newHeight)
+		print (self.rectsTotal)
+		print (self.eresult['size']['area'])
+		return self.eresult
 
 def main():
 	# init work: input rectangles , sort them by
 	# their height, greatest height first,
 	# and set the up-boundary of the enclosing rectangle.
+
 	inputs = open("input1.txt", "r")
 	rectangles = []
 	ewidth = 0
@@ -152,7 +178,7 @@ def main():
 	# place the rectangles into the initial large rectangle
 	action = RectanglesEnclosing(rects)
 	action.setSize(ewidth, eheight)
-	print (action.compute())
+	result = action.compute()
 
 if __name__ == "__main__":
 	main()
